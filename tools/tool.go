@@ -19,6 +19,8 @@ func ChangeFaceToNumber(f string)int{
 		return 13
 	case "A":
 		return 14
+	case "X":
+		return 0
 	default:
 		int,_:=strconv.Atoi(f)
 		return int
@@ -29,18 +31,19 @@ func ChangeFaceToNumber(f string)int{
 // PutCardIntoHand 将字符串信息转换写入model.poker并放到当前回合里
 // 返回model.Turn
 func PutCardIntoHand(data *model.Data) (turn model.Turn) {
-	a := make([]model.Poker,5,5)
-	b := make([]model.Poker,5,5)
+	length := len(data.Alice)/2
+	a := make([]model.Poker, length, length)
+	b := make([]model.Poker, length, length)
 
-	for i:=0;i<5;i++{
+	for i:=0;i< length;i++{
 			a[i].Face = ChangeFaceToNumber(string(data.Alice[i*2]))
 			a[i].Color = string(data.Alice[i*2+1])
 			b[i].Face = ChangeFaceToNumber(string(data.Bob[i*2]))
 			b[i].Color = string(data.Bob[i*2+1])
 	}
 
-	turn.AliceHandCard = a
-	turn.BobHandCard = b
+	turn.Alice.Pokers = a
+	turn.Bob.Pokers = b
 
 	return
 }
@@ -301,6 +304,13 @@ func AdvancedCompareOnePair(cardsA,cardsB []model.Poker)int{
 
 	//错误情况下返回-2
 	return -2
+}
+
+//use7cards
+
+func CalculateAllPossibilities(pokers []model.Poker)(AllPossibilities []model.HandCards){
+
+	return nil
 }
 
 

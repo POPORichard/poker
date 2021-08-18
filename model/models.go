@@ -20,12 +20,8 @@ type InputData struct {
 
 // Turn 每一局的所以数据
 type Turn struct {
-	AliceHandCard []Poker
-	AliceFeature Feature
-	AliceLevel int
-	BobHandCard []Poker
-	BobFeature Feature
-	BobLevel int
+	Alice HandCards
+	Bob HandCards
 	Winner int
 }
 // Feature 每一组牌的特征值
@@ -33,4 +29,10 @@ type Feature struct {
 	Continue int
 	SameCards int
 	Flush bool
+}
+
+type HandCards struct {
+	Pokers []Poker
+	Feature Feature
+	Level int
 }
