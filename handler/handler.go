@@ -31,7 +31,9 @@ func ReadDataToModel(path string)[]model.Data{
 // CreateTurn 创建一局游戏
 func CreateTurn(match *model.Data) model.Turn {
 	turn := tools.PutCardIntoHand(match)
-	tools.AdjustCards(&turn)
+
+	turn.AliceHandCard = tools.AdjustCards(turn.AliceHandCard)
+	turn.BobHandCard = tools.AdjustCards(turn.BobHandCard)
 
 	return turn
 }
@@ -44,6 +46,19 @@ func AnalyseFeature(turn *model.Turn)*model.Turn{
 	turn.BobFeature.SameCards = tools.GetSameCards(turn.BobHandCard)
 	turn.AliceFeature.Flush = tools.CheckFlush(turn.AliceHandCard)
 	turn.BobFeature.Flush = tools.CheckFlush(turn.BobHandCard)
+
+	// 处理black Jack
+	if turn.AliceFeature.Continue == 4 && turn.AliceHandCard[0].Face == 14 && turn.AliceHandCard[1].Face  == 5{
+		turn.AliceHandCard[0].Face  = 1
+		turn.AliceFeature.Continue = 5
+		turn.AliceHandCard = tools.AdjustCards(turn.AliceHandCard)
+	}
+
+	if turn.BobFeature.Continue ==4 && turn.BobHandCard[0].Face == 14 && turn.BobHandCard[1].Face  == 5{
+		turn.BobHandCard[0].Face  = 1
+		turn.BobFeature.Continue = 5
+		turn.BobHandCard = tools.AdjustCards(turn.BobHandCard)
+	}
 
 	return turn
 }
@@ -84,15 +99,18 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 		return turn
 	}
 
-	//牌等级为8，比较中间一张
+	//牌等级为8，比较中间一张,若相同，比较第一张，若还是相同，比较最后一张
 	if turn.AliceLevel ==8{
-		if turn.AliceHandCard[2].Face > turn.BobHandCard[2].Face{
-			turn.Winner = 0
-			return turn
-		}
-		if turn.AliceHandCard[2].Face < turn.BobHandCard[2].Face{
-			turn.Winner = 0
-			return turn
+		if turn.AliceHandCard[2].Face > turn.BobHandCard[2].Face{turn.Winner = 0}
+		if turn.AliceHandCard[2].Face < turn.BobHandCard[2].Face{turn.Winner = 1}
+		if turn.AliceHandCard[2].Face == turn.BobHandCard[2].Face{
+			if turn.AliceHandCard[0].Face > turn.BobHandCard[0].Face{turn.Winner = 0}
+			if turn.AliceHandCard[0].Face < turn.BobHandCard[0].Face{turn.Winner = 1}
+			if turn.AliceHandCard[0].Face == turn.BobHandCard[0].Face{
+				if turn.AliceHandCard[4].Face > turn.BobHandCard[4].Face{turn.Winner = 0}
+				if turn.AliceHandCard[4].Face < turn.BobHandCard[4].Face{turn.Winner = 1}
+				if turn.AliceHandCard[4].Face == turn.BobHandCard[4].Face{turn.Winner = -1}
+			}
 		}
 		return turn
 
@@ -166,7 +184,7 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 	}
 
 	//此处可能需要优化！！
-	//若牌等级为4，先比较中间一张，在比较第一张或第5张
+	//若牌等级为4，先比较中间一张，再比较第一张或第五张
 	if turn.AliceLevel ==4{
 		if turn.AliceHandCard[2].Face > turn.BobHandCard[2].Face{
 			turn.Winner = 0
@@ -176,7 +194,10 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 			turn.Winner = 0
 			return turn
 		}
+
 		if turn.AliceHandCard[2].Face == turn.BobHandCard[2].Face{
+			//一组牌中除了三张相同的牌外，比较另外两张单牌的大小
+			//cardsA中大的给a1，小的给a2，cardsB同理
 			var a1,a2,b1,b2 int
 			if turn.AliceHandCard[0].Face != turn.AliceHandCard[2].Face{
 				a1=turn.AliceHandCard[0].Face
@@ -202,6 +223,7 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 				a2 = turn.BobHandCard[4].Face
 			}
 
+			//比较单牌大小
 			if a1 > b1{
 				turn.Winner = 0
 			}else if a1<b1{
@@ -223,12 +245,12 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 
 	//若牌等级为3，需要先判断两个对子的大小，再判断单牌大小
 	if turn.AliceLevel ==3{
-		turn.Winner = tools.AdvancedCompare(turn.AliceFeature.SameCards,turn.BobFeature.SameCards,turn.AliceHandCard,turn.BobHandCard)
+		turn.Winner = tools.AdvancedCompareTwoPair(turn.AliceFeature.SameCards,turn.BobFeature.SameCards,turn.AliceHandCard,turn.BobHandCard)
 	}
 
 	//若牌等级为2，需要先判断一个对子大小，再判断单牌大小
 	if turn.AliceLevel ==2{
-		turn.Winner = tools.AdvancedCompare(turn.AliceFeature.SameCards,turn.BobFeature.SameCards,turn.AliceHandCard,turn.BobHandCard)
+		turn.Winner = tools.AdvancedCompareOnePair(turn.AliceHandCard,turn.BobHandCard)
 	}
 
 	//若牌等级为一，直接逐个比较牌大小
@@ -238,6 +260,7 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 
 	return turn
 }
+
 
 
 

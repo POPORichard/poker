@@ -47,42 +47,29 @@ func PutCardIntoHand(data *model.Data) (turn model.Turn) {
 
 // AdjustCards 把牌按Face从大到小排列
 // 输入model.turn的指针，无返回
-func AdjustCards(turn *model.Turn){
+func AdjustCards(pokers []model.Poker)[]model.Poker{
 	var tmp model.Poker
+	length := len(pokers)
+
 	var target int
 	var biggest int
 
-	for i :=range turn.AliceHandCard{
-		biggest = turn.AliceHandCard[i].Face
+	for i :=range pokers{
+		biggest = pokers[i].Face
 		target=i
-		for t:=i+1;t<len(turn.AliceHandCard);t++{
-			if biggest < turn.AliceHandCard[t].Face{
-				biggest = turn.AliceHandCard[t].Face
+		for t:=i+1;t< length;t++{
+			if biggest < pokers[t].Face{
+				biggest = pokers[t].Face
 				target = t
 			}
 		}
 		if target !=i {
-			tmp = turn.AliceHandCard[i]
-			turn.AliceHandCard[i] = turn.AliceHandCard[target]
-			turn.AliceHandCard[target] = tmp
+			tmp = pokers[i]
+			pokers[i] = pokers[target]
+			pokers[target] = tmp
 		}
 	}
-	// 下面是重复代码务必后面改进
-	for i :=range turn.BobHandCard{
-		biggest = turn.BobHandCard[i].Face
-		target=i
-		for t:=i+1;t<len(turn.BobHandCard);t++{
-			if biggest < turn.BobHandCard[t].Face{
-				biggest = turn.BobHandCard[t].Face
-				target = t
-			}
-		}
-		if target !=i {
-			tmp = turn.BobHandCard[i]
-			turn.BobHandCard[i] = turn.BobHandCard[target]
-			turn.BobHandCard[target] = tmp
-		}
-	}
+	return pokers
 }
 
 // GetContinueLength 计算一手牌中连续牌的长度
@@ -149,7 +136,7 @@ func GetLevel(feature *model.Feature)int{
 	}
 
 	//four of a kind
-	if feature.SameCards == 3{
+	if feature.SameCards == 3 || feature.SameCards == 30{
 		return 8
 	}
 
@@ -169,7 +156,7 @@ func GetLevel(feature *model.Feature)int{
 	}
 
 	//three of a kind
-	if feature.SameCards ==2{
+	if feature.SameCards ==2 || feature.SameCards == 20 || feature.SameCards == 200{
 		return 4
 	}
 
@@ -179,7 +166,7 @@ func GetLevel(feature *model.Feature)int{
 	}
 
 	//one pair
-	if feature.SameCards ==1{
+	if feature.SameCards ==1 || feature.SameCards ==10 || feature.SameCards ==100 || feature.SameCards ==1000{
 		return 2
 	}
 
@@ -203,51 +190,28 @@ func CompareEachCard(cardsA,cardsB []model.Poker)int{
 	return -1
 }
 
-// AdvancedCompare 当两手牌中同时出现一对或两对时使用
+// AdvancedCompareTwoPair 当两手牌中同时两对时使用
 // 输入两手牌的相同牌特征值，并输入两手牌[]model.Poker
 // 若第一组手牌大则返回0,若第二组手牌大则返回1，若两手牌同样大则返回-1
-func AdvancedCompare(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB []model.Poker)int{
-	lenth := len(cardsA)
+func AdvancedCompareTwoPair(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB []model.Poker)int{
 
-	if sameCardFeatureA ==1{
-		a := 0
-		b := 0
-		for i:=0;i<lenth-1;i++{
-			if cardsA[i].Face == cardsA[i+1].Face{
-				a = cardsA[i].Face
-			}
-		}
-		if a==0{
-			panic("error")
-		}
-		for i:=0;i<lenth-1;i++{
-			if cardsB[i].Face == cardsB[i+1].Face{
-				b = cardsB[i].Face
-			}
-		}
-		if b==0{
-			panic("error")
-		}
-
-		if a>b{return 0}
-		if a<b{return 1}
-		if a==b{
-			return CompareEachCard(cardsA,cardsB)
-		}
-	}
+	//根据sameCard特征值找到该先比较那一组卡
+	//sameCard特征值为11: 前面4张牌两两成对
+	//sameCard特征值为101: 前面2张和最后2张牌两两成对
+	//sameCard特征值为110: 后面4张牌两两成对
 	var B1,B2,B3 int
 	if sameCardFeatureB == 11{
-		B1 = 1
-		B2 = 3
-		B3 = 0
+		B1 = 0
+		B2 = 2
+		B3 = 4
 	}else if sameCardFeatureB ==101{
 		B1 = 0
 		B2 = 3
 		B3 = 2
 	}else if sameCardFeatureB == 110{
-		B1 = 0
-		B2 = 2
-		B3 = 4
+		B1 = 1
+		B2 = 3
+		B3 = 0
 	}else {
 		panic("Error")
 	}
@@ -281,15 +245,15 @@ func AdvancedCompare(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB []model
 	}
 
 	if sameCardFeatureA ==110{
-		if cardsA[0].Face > cardsB[B1].Face{return 0}
-		if cardsA[0].Face < cardsB[B1].Face{return 1}
-		if cardsA[0].Face == cardsB[B1].Face{
-			if cardsA[2].Face > cardsB[B2].Face{return 0}
-			if cardsA[2].Face < cardsB[B2].Face{return 1}
-			if cardsA[2].Face ==  cardsB[B2].Face{
-				if cardsA[4].Face > cardsB[B3].Face{return 1}
-				if cardsA[4].Face < cardsB[B3].Face{return 0}
-				if cardsA[4].Face == cardsB[B3].Face{return -1}
+		if cardsA[1].Face > cardsB[B1].Face{return 0}
+		if cardsA[1].Face < cardsB[B1].Face{return 1}
+		if cardsA[1].Face == cardsB[B1].Face{
+			if cardsA[3].Face > cardsB[B2].Face{return 0}
+			if cardsA[3].Face < cardsB[B2].Face{return 1}
+			if cardsA[3].Face ==  cardsB[B2].Face{
+				if cardsA[0].Face > cardsB[B3].Face{return 1}
+				if cardsA[0].Face < cardsB[B3].Face{return 0}
+				if cardsA[0].Face == cardsB[B3].Face{return -1}
 			}
 		}
 	}
@@ -297,6 +261,45 @@ func AdvancedCompare(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB []model
 
 
 
+	return -2
+}
+
+// AdvancedCompareOnePair 当两手牌中同时两对时使用
+// 输入两手牌的相同牌特征值，并输入两手牌[]model.Poker
+// 若第一组手牌大则返回0,若第二组手牌大则返回1，若两手牌同样大则返回-1
+func AdvancedCompareOnePair(cardsA,cardsB []model.Poker)int{
+	length := len(cardsA)
+	a := 0
+	b := 0
+
+	//找出cardsA中一对牌的Face
+	for i:=0;i< length-1;i++{
+		if cardsA[i].Face == cardsA[i+1].Face{
+			a = cardsA[i].Face
+		}
+	}
+	if a==0{
+		panic("error")
+	}
+
+	//找出cardsB中一对牌的Face
+	for i:=0;i< length-1;i++{
+		if cardsB[i].Face == cardsB[i+1].Face{
+			b = cardsB[i].Face
+		}
+	}
+	if b==0{
+		panic("error")
+	}
+
+	//对成对的牌比较，若相同，则依次比较每张牌
+	if a>b{return 0}
+	if a<b{return 1}
+	if a==b{
+		return CompareEachCard(cardsA,cardsB)
+	}
+
+	//错误情况下返回-2
 	return -2
 }
 
