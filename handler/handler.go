@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"poker/Tools"
+	"poker/tools"
 	"poker/model"
 )
 // ReadDataToModel 读取json文件数据
@@ -30,30 +30,33 @@ func ReadDataToModel(path string)[]model.Data{
 
 // CreateTurn 创建一局游戏
 func CreateTurn(match *model.Data) model.Turn {
-	turn := Tools.PutCardIntoHand(match)
-	Tools.AdjustCards(&turn)
+	turn := tools.PutCardIntoHand(match)
+	tools.AdjustCards(&turn)
 
 	return turn
 }
+
 // AnalyseFeature 分析这局游戏中双方的手牌特征
 func AnalyseFeature(turn *model.Turn)*model.Turn{
-	turn.AliceFeature.Continue = Tools.GetContinueLength(turn.AliceHandCard)
-	turn.BobFeature.Continue = Tools.GetContinueLength(turn.BobHandCard)
-	turn.AliceFeature.SameCards = Tools.GetSameCards(turn.AliceHandCard)
-	turn.BobFeature.SameCards = Tools.GetSameCards(turn.BobHandCard)
-	turn.AliceFeature.Flush = Tools.CheckFlush(turn.AliceHandCard)
-	turn.BobFeature.Flush = Tools.CheckFlush(turn.BobHandCard)
+	turn.AliceFeature.Continue = tools.GetContinueLength(turn.AliceHandCard)
+	turn.BobFeature.Continue = tools.GetContinueLength(turn.BobHandCard)
+	turn.AliceFeature.SameCards = tools.GetSameCards(turn.AliceHandCard)
+	turn.BobFeature.SameCards = tools.GetSameCards(turn.BobHandCard)
+	turn.AliceFeature.Flush = tools.CheckFlush(turn.AliceHandCard)
+	turn.BobFeature.Flush = tools.CheckFlush(turn.BobHandCard)
 
 	return turn
 }
+
 // AnalyseLevel 根据特征值判断level
 func AnalyseLevel(turn *model.Turn)*model.Turn{
-	turn.AliceLevel = Tools.GetLevel(&turn.AliceFeature)
-	turn.BobLevel = Tools.GetLevel(&turn.BobFeature)
+	turn.AliceLevel = tools.GetLevel(&turn.AliceFeature)
+	turn.BobLevel = tools.GetLevel(&turn.BobFeature)
 
 	return turn
 }
 
+// JudgeWinner 根据level等级判断赢家
 func JudgeWinner(turn *model.Turn)*model.Turn{
 	if turn.AliceLevel > turn.BobLevel{
 		turn.Winner = 0
@@ -66,7 +69,9 @@ func JudgeWinner(turn *model.Turn)*model.Turn{
 	return turn
 }
 
+// advancedJudgement 如果等级相同则进一步判断
 func advancedJudgement(turn *model.Turn)*model.Turn{
+	// 牌等级为9，只比较最大一张
 	if turn.AliceLevel == 9{
 		if turn.AliceHandCard[0].Face > turn.BobHandCard[0].Face{
 			turn.Winner = 0
@@ -79,6 +84,7 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 		return turn
 	}
 
+	//牌等级为8，比较中间一张
 	if turn.AliceLevel ==8{
 		if turn.AliceHandCard[2].Face > turn.BobHandCard[2].Face{
 			turn.Winner = 0
@@ -92,6 +98,7 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 
 	}
 
+	//牌等级为7，先比较中间一张，若相同，再根据相同牌的特征值比较第2张或第4张
 	if turn.AliceLevel ==7{
 		if turn.AliceHandCard[2].Face > turn.BobHandCard[2].Face{
 			turn.Winner = 0
@@ -131,6 +138,7 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 		return turn
 	}
 
+	//若牌等级为7，比较第一张
 	if turn.AliceLevel ==6{
 		if turn.AliceHandCard[0].Face > turn.BobHandCard[0].Face{
 			turn.Winner = 0
@@ -143,6 +151,7 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 		return turn
 	}
 
+	//若牌等级为5，比较第一张
 	if turn.AliceLevel ==5{
 		if turn.AliceHandCard[0].Face > turn.BobHandCard[0].Face{
 			turn.Winner = 0
@@ -156,6 +165,8 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 
 	}
 
+	//此处可能需要优化！！
+	//若牌等级为4，先比较中间一张，在比较第一张或第5张
 	if turn.AliceLevel ==4{
 		if turn.AliceHandCard[2].Face > turn.BobHandCard[2].Face{
 			turn.Winner = 0
@@ -210,16 +221,19 @@ func advancedJudgement(turn *model.Turn)*model.Turn{
 
 	}
 
+	//若牌等级为3，需要先判断两个对子的大小，再判断单牌大小
 	if turn.AliceLevel ==3{
-		turn.Winner = Tools.AdvancedCompare(turn.AliceFeature.SameCards,turn.BobFeature.SameCards,turn.AliceHandCard,turn.BobHandCard)
-
+		turn.Winner = tools.AdvancedCompare(turn.AliceFeature.SameCards,turn.BobFeature.SameCards,turn.AliceHandCard,turn.BobHandCard)
 	}
+
+	//若牌等级为2，需要先判断一个对子大小，再判断单牌大小
 	if turn.AliceLevel ==2{
-		turn.Winner = Tools.AdvancedCompare(turn.AliceFeature.SameCards,turn.BobFeature.SameCards,turn.AliceHandCard,turn.BobHandCard)
+		turn.Winner = tools.AdvancedCompare(turn.AliceFeature.SameCards,turn.BobFeature.SameCards,turn.AliceHandCard,turn.BobHandCard)
 	}
 
+	//若牌等级为一，直接逐个比较牌大小
 	if turn.AliceLevel ==1{
-		turn.Winner = Tools.CompareEachCard(turn.AliceHandCard,turn.BobHandCard)
+		turn.Winner = tools.CompareEachCard(turn.AliceHandCard,turn.BobHandCard)
 	}
 
 	return turn
