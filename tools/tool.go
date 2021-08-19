@@ -131,7 +131,7 @@ func CheckFlush(pokers []model.Poker)bool{
 
 // GetLevel 根据特征值判断一手牌的等级
 // 输入一组牌的特征值model.Feature,返回其等级Level的int值
-func GetLevel(feature *model.Feature)int{
+func GetLevel(feature model.Feature)int{
 
 	//straight flush or royal flush
 	if feature.Flush && feature.Continue ==5{
@@ -226,8 +226,8 @@ func AdvancedCompareTwoPair(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB 
 			if cardsA[3].Face > cardsB[B2].Face{return 0}
 			if cardsA[3].Face < cardsB[B2].Face{return 1}
 			if cardsA[3].Face ==  cardsB[B2].Face{
-				if cardsA[0].Face > cardsB[B3].Face{return 1}
-				if cardsA[0].Face < cardsB[B3].Face{return 0}
+				if cardsA[0].Face > cardsB[B3].Face{return 0}
+				if cardsA[0].Face < cardsB[B3].Face{return 1}
 				if cardsA[0].Face == cardsB[B3].Face{return -1}
 			}
 		}
@@ -240,8 +240,8 @@ func AdvancedCompareTwoPair(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB 
 			if cardsA[3].Face > cardsB[B2].Face{return 0}
 			if cardsA[3].Face < cardsB[B2].Face{return 1}
 			if cardsA[3].Face ==  cardsB[B2].Face{
-				if cardsA[2].Face > cardsB[B3].Face{return 1}
-				if cardsA[2].Face < cardsB[B3].Face{return 0}
+				if cardsA[2].Face > cardsB[B3].Face{return 0}
+				if cardsA[2].Face < cardsB[B3].Face{return 1}
 				if cardsA[2].Face == cardsB[B3].Face{return -1}
 			}
 		}
@@ -254,8 +254,8 @@ func AdvancedCompareTwoPair(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB 
 			if cardsA[3].Face > cardsB[B2].Face{return 0}
 			if cardsA[3].Face < cardsB[B2].Face{return 1}
 			if cardsA[3].Face ==  cardsB[B2].Face{
-				if cardsA[0].Face > cardsB[B3].Face{return 1}
-				if cardsA[0].Face < cardsB[B3].Face{return 0}
+				if cardsA[0].Face > cardsB[B3].Face{return 0}
+				if cardsA[0].Face < cardsB[B3].Face{return 1}
 				if cardsA[0].Face == cardsB[B3].Face{return -1}
 			}
 		}
@@ -308,10 +308,279 @@ func AdvancedCompareOnePair(cardsA,cardsB []model.Poker)int{
 
 //use7cards
 
-func CalculateAllPossibilities(pokers []model.Poker)(AllPossibilities []model.HandCards){
+func chooseColor(pokers []model.Poker)string{
+	a := [4]int{0}
+	t := 0
+	for _,poker := range pokers{
+		if poker.Color == "s"{
+			a[0]++
+		}
+		if poker.Color == "h"{
+			a[1]++
+		}
+		if poker.Color == "d"{
+			a[2]++
+		}
+		if poker.Color == "c"{
+			a[3]++
+		}
+	}
 
-	return nil
+	n:=a[0]
+	for i:=1;i<4;i++{
+		if n<a[i]{
+			n = a[i]
+			t = i
+		}
+	}
+	if t == 0{return "s"}
+	if t == 1{return "h"}
+	if t == 2{return "d"}
+	if t == 3{return "c"}
+	return "n"
+
 }
+
+func choose4From6(pokers []model.Poker)[]model.HandCards{
+	pokers = pokers[:6]
+	pointer := 0
+	results := make([]model.HandCards,15,15)
+
+	for t:=0;t<5;t++{
+		for i:=t+1;i<6;i++{
+			result := make([]model.Poker,0,7)
+			tmp := make([]model.Poker,0,7)
+			for x:= range pokers{
+				tmp = append(tmp,pokers[x])
+			}
+			result = append(tmp[:t],tmp[t+1:]...)
+			result = append(result[:i-1],result[i:]...)
+			results[pointer].Pokers = result
+			pointer++
+		}
+	}
+
+	//for i :=range results{
+	//	results[i].Pokers = AdjustCards(results[i].Pokers)
+	//	fmt.Println(results[i].Pokers)
+	//}
+	//
+	//fmt.Println("==============")
+	//
+	//for i:= range results{
+	//	for t:=i+1;t<15;t++{
+	//		if reflect.DeepEqual(results[i],results[t]){
+	//			fmt.Println(results[i],i)
+	//			fmt.Println(results[t],t)
+	//		}
+	//	}
+	//
+	//}
+	//fmt.Println("len:",len(results))
+	//
+	//panic("end")
+	return results
+}
+
+func Choose5From7(pokers []model.Poker)[]model.HandCards{
+	pointer := 0
+	results := make([]model.HandCards,21,21)
+
+	for t:=0;t<6;t++{
+		for i:=t+1;i<7;i++{
+			result := make([]model.Poker,0,7)
+			tmp := make([]model.Poker,0,7)
+			for x:= range pokers{
+				tmp = append(tmp,pokers[x])
+			}
+				result = append(tmp[:t],tmp[t+1:]...)
+				result = append(result[:i-1],result[i:]...)
+				results[pointer].Pokers = result
+				pointer++
+		}
+	}
+
+	//for i :=range results{
+	//	results[i].Pokers = AdjustCards(results[i].Pokers)
+	//	fmt.Println(results[i].Pokers)
+	//}
+	//
+	//fmt.Println("==============")
+	//
+	//for i:= range results{
+	//	for t:=i+1;t<21;t++{
+	//		if reflect.DeepEqual(results[i],results[t]){
+	//			fmt.Println(results[i],i)
+	//			fmt.Println(results[t],t)
+	//		}
+	//	}
+	//
+	//}
+	//fmt.Println("len:",len(results))
+
+	return results
+}
+
+func CalculateAllPossibilitiesWithCardZero(pokers []model.Poker)(AllPossibilities[]model.HandCards){
+	AllPossibilities = choose4From6(pokers)
+	return
+}
+
+func AssemblyZeroCard(card *model.HandCards){
+
+	cardZero := model.Poker{
+		Face:  0,
+		Color: chooseColor(card.Pokers),
+	}
+
+	//Level 9
+	if card.Feature.Continue == 4 && card.Feature.Flush{
+		if card.Pokers[0].Face == 14{
+			cardZero.Face = 10
+		}else{
+			cardZero.Face = card.Pokers[0].Face+1
+		}
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 9
+
+		return
+	}
+	if card.Feature.Continue ==3 && card.Feature.Flush{
+		if card.Pokers[0].Face-1 == card.Pokers[1].Face{
+			if card.Pokers[2].Face-2 == card.Pokers[3].Face{
+				cardZero.Face = card.Pokers[2].Face-1
+				card.Pokers = append(card.Pokers,cardZero)
+				card.Level = 9
+				return
+			}
+		}else {
+			if card.Pokers[0].Face-2 == card.Pokers[1].Face{
+				cardZero.Face = card.Pokers[0].Face-2
+				card.Pokers = append(card.Pokers,cardZero)
+				card.Level = 9
+				return
+			}
+		}
+	}
+	if card.Feature.Continue == 2 && card.Feature.Flush{
+		if card.Pokers[0].Face -1 == card.Pokers[1].Face && card.Pokers[2].Face-1 == card.Pokers[3].Face && card.Pokers[1].Face-2 == card.Pokers[2].Face{
+			cardZero.Face = card.Pokers[1].Face-1
+			card.Pokers = append(card.Pokers,cardZero)
+			card.Level = 9
+			return
+		}
+	}
+
+
+	//Level 8
+	if card.Feature.SameCards ==3{
+		if card.Pokers[0].Face == 14{
+			cardZero.Face = 13
+		}else{
+			cardZero.Face = card.Pokers[0].Face+1
+		}
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 8
+		return
+	}
+	if card.Feature.SameCards == 2 {
+		cardZero.Face = card.Pokers[0].Face
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 8
+		return
+	}
+	if card.Feature.SameCards == 20{
+		cardZero.Face = card.Pokers[1].Face
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 8
+		return
+	}
+
+	//Level 7
+
+	if card.Feature.SameCards == 11{
+		cardZero.Face = card.Pokers[0].Face
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 7
+		return
+	}
+
+	//Level 6
+	if card.Feature.Flush{
+		cardZero.Face = 14
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 6
+		return
+	}
+
+	//Level 5
+	if card.Feature.Continue == 4{
+		if card.Pokers[0].Face == 14{
+			cardZero.Face = 10
+		}else{
+			cardZero.Face = card.Pokers[0].Face+1
+		}
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 5
+		return
+	}
+	if card.Feature.Continue ==3{
+		if card.Pokers[0].Face-1 == card.Pokers[1].Face{
+			if card.Pokers[2].Face-2 == card.Pokers[3].Face{
+				cardZero.Face = card.Pokers[2].Face-1
+				card.Pokers = append(card.Pokers,cardZero)
+				card.Level = 5
+				return
+			}
+		}else {
+			if card.Pokers[0].Face-2 == card.Pokers[1].Face{
+				cardZero.Face = card.Pokers[0].Face-1
+				card.Pokers = append(card.Pokers,cardZero)
+				card.Level = 5
+				return
+			}
+		}
+	}
+	if card.Feature.Continue == 2{
+		if card.Pokers[0].Face -1 == card.Pokers[1].Face && card.Pokers[2].Face-1 == card.Pokers[3].Face && card.Pokers[1].Face-2 == card.Pokers[2].Face{
+			cardZero.Face = card.Pokers[1].Face-1
+			card.Pokers = append(card.Pokers,cardZero)
+			card.Level = 5
+			return
+		}
+	}
+
+	//Level 4
+	if card.Feature.SameCards == 1{
+		cardZero.Face = card.Pokers[0].Face
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 4
+		return
+	}
+	if card.Feature.SameCards == 10{
+		cardZero.Face = card.Pokers[1].Face
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 4
+		return
+	}
+	if card.Feature.SameCards == 100{
+		cardZero.Face = card.Pokers[2].Face
+		card.Pokers = append(card.Pokers,cardZero)
+		card.Level = 4
+		return
+	}
+
+	//Level3
+	//Level2
+	cardZero.Face = card.Pokers[0].Face
+	card.Pokers = append(card.Pokers,cardZero)
+	card.Level = 2
+	return
+
+}
+
+
+
 
 
 
