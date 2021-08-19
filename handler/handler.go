@@ -119,15 +119,15 @@ func advancedJudgement(Alice,Bob *model.HandCards)int{
 			if Alice.Feature.SameCards ==12 {
 				a = Alice.Pokers[4].Face
 			}else if Alice.Feature.SameCards ==21 {
-				a = Alice.Pokers[1].Face
+				a = Alice.Pokers[0].Face
 			}else{
-				fmt.Println(Alice.Feature.SameCards)
+				fmt.Println(Alice)
 				panic("Error ! Feature.SameCard ")
 			}
 			if Bob.Feature.SameCards ==12 {
-				a = Bob.Pokers[4].Face
+				b = Bob.Pokers[4].Face
 			}else if Bob.Feature.SameCards ==21 {
-				a = Bob.Pokers[1].Face
+				b = Bob.Pokers[0].Face
 			}else{
 				fmt.Println(Bob.Feature.SameCards)
 				panic("Error ! Feature.SameCard ")
@@ -156,6 +156,10 @@ func advancedJudgement(Alice,Bob *model.HandCards)int{
 		if Alice.Pokers[0].Face < Bob.Pokers[0].Face{
 			return 1
 		}
+		if Alice.Pokers[0].Face == Bob.Pokers[0].Face{
+			return -1
+		}
+
 	}
 
 	//此处可能需要优化！！
@@ -187,7 +191,7 @@ func advancedJudgement(Alice,Bob *model.HandCards)int{
 			if Bob.Pokers[0].Face != Bob.Pokers[2].Face{
 				b1=Bob.Pokers[0].Face
 				if Bob.Pokers[1].Face == Bob.Pokers[2].Face{
-					b2 = Bob.Pokers[3].Face
+					b2 = Bob.Pokers[4].Face
 				}else {
 					b2 = Bob.Pokers[1].Face
 				}
@@ -236,10 +240,7 @@ func advancedJudgement(Alice,Bob *model.HandCards)int{
 // analyseFeature 分析这局游戏中双方的手牌特征
 func analyseFeature(cards *model.HandCards){
 	cards.Feature.Continue =tools.GetContinueLength(cards.Pokers)
-	cards.Feature.Continue = tools.GetContinueLength(cards.Pokers)
 	cards.Feature.SameCards = tools.GetSameCards(cards.Pokers)
-	cards.Feature.SameCards = tools.GetSameCards(cards.Pokers)
-	cards.Feature.Flush = tools.CheckFlush(cards.Pokers)
 	cards.Feature.Flush = tools.CheckFlush(cards.Pokers)
 
 	// 处理black Jack
@@ -250,9 +251,19 @@ func analyseFeature(cards *model.HandCards){
 			cards.Pokers = tools.AdjustCards(cards.Pokers)
 		}
 	}else if len(cards.Pokers) == 4{
-		if cards.Feature.SameCards == 0 && cards.Pokers[0].Face == 14 && cards.Pokers[1].Face == 5{
-			cards.Pokers[0].Face = 1
-			cards.Pokers = tools.AdjustCards(cards.Pokers)
+		if cards.Feature.SameCards == 0 && cards.Pokers[0].Face == 14{
+			tmp := 0
+			for i:=1;i<4;i++{
+				if cards.Pokers[i].Face == 2 || cards.Pokers[i].Face == 3 || cards.Pokers[i].Face ==4 || cards.Pokers[i].Face ==5{
+					tmp++
+				}
+			}
+			if tmp == 3{
+				cards.Pokers[0].Face = 1
+				cards.Pokers = tools.AdjustCards(cards.Pokers)
+				cards.Feature.Continue = tools.GetContinueLength(cards.Pokers)
+			}
+
 		}
 	}else {
 		panic("Error wrong pokers number!")
@@ -270,6 +281,7 @@ func internalCompetition(cards model.HandCards)model.HandCards{
 }
 
 func getBestCombination(Combinations []model.HandCards)(best model.HandCards){
+
 	t := 0
 	var bests []model.HandCards
 	for i := range Combinations{
@@ -316,6 +328,7 @@ func handleCardZero(pokers []model.Poker)model.HandCards{
 }
 
 func getBestCombinationWithCardZero(Combinations []model.HandCards)(best model.HandCards){
+
 	t := 0
 	var bests []model.HandCards
 	for i := range Combinations{
@@ -341,12 +354,14 @@ func getBestCombinationWithCardZero(Combinations []model.HandCards)(best model.H
 		panic("Error")
 	}
 
+
+
+	best = bests[0]
+	tools.AdjustCards(best.Pokers)
 	if length == 1{
 		return bests[0]
 	}
 
-	best = bests[0]
-	tools.AdjustCards(best.Pokers)
 	for i:=1;i<length;i++{
 		tools.AdjustCards(bests[i].Pokers)
 		t = advancedJudgement(&best,&bests[i])

@@ -220,15 +220,15 @@ func AdvancedCompareTwoPair(sameCardFeatureA,sameCardFeatureB int,cardsA,cardsB 
 	}
 
 	if sameCardFeatureA == 11{
-		if cardsA[1].Face > cardsB[B1].Face{return 0}
-		if cardsA[1].Face < cardsB[B1].Face{return 1}
-		if cardsA[1].Face == cardsB[B1].Face{
-			if cardsA[3].Face > cardsB[B2].Face{return 0}
-			if cardsA[3].Face < cardsB[B2].Face{return 1}
-			if cardsA[3].Face ==  cardsB[B2].Face{
-				if cardsA[0].Face > cardsB[B3].Face{return 0}
-				if cardsA[0].Face < cardsB[B3].Face{return 1}
-				if cardsA[0].Face == cardsB[B3].Face{return -1}
+		if cardsA[0].Face > cardsB[B1].Face{return 0}
+		if cardsA[0].Face < cardsB[B1].Face{return 1}
+		if cardsA[0].Face == cardsB[B1].Face{
+			if cardsA[2].Face > cardsB[B2].Face{return 0}
+			if cardsA[2].Face < cardsB[B2].Face{return 1}
+			if cardsA[2].Face ==  cardsB[B2].Face{
+				if cardsA[4].Face > cardsB[B3].Face{return 0}
+				if cardsA[4].Face < cardsB[B3].Face{return 1}
+				if cardsA[4].Face == cardsB[B3].Face{return -1}
 			}
 		}
 	}
@@ -360,25 +360,6 @@ func choose4From6(pokers []model.Poker)[]model.HandCards{
 		}
 	}
 
-	//for i :=range results{
-	//	results[i].Pokers = AdjustCards(results[i].Pokers)
-	//	fmt.Println(results[i].Pokers)
-	//}
-	//
-	//fmt.Println("==============")
-	//
-	//for i:= range results{
-	//	for t:=i+1;t<15;t++{
-	//		if reflect.DeepEqual(results[i],results[t]){
-	//			fmt.Println(results[i],i)
-	//			fmt.Println(results[t],t)
-	//		}
-	//	}
-	//
-	//}
-	//fmt.Println("len:",len(results))
-	//
-	//panic("end")
 	return results
 }
 
@@ -399,24 +380,6 @@ func Choose5From7(pokers []model.Poker)[]model.HandCards{
 				pointer++
 		}
 	}
-
-	//for i :=range results{
-	//	results[i].Pokers = AdjustCards(results[i].Pokers)
-	//	fmt.Println(results[i].Pokers)
-	//}
-	//
-	//fmt.Println("==============")
-	//
-	//for i:= range results{
-	//	for t:=i+1;t<21;t++{
-	//		if reflect.DeepEqual(results[i],results[t]){
-	//			fmt.Println(results[i],i)
-	//			fmt.Println(results[t],t)
-	//		}
-	//	}
-	//
-	//}
-	//fmt.Println("len:",len(results))
 
 	return results
 }
@@ -502,6 +465,7 @@ func AssemblyZeroCard(card *model.HandCards){
 		cardZero.Face = card.Pokers[0].Face
 		card.Pokers = append(card.Pokers,cardZero)
 		card.Level = 7
+		card.Feature.SameCards = 12
 		return
 	}
 
